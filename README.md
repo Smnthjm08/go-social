@@ -22,3 +22,15 @@ Currently in development.
 - `docs`: Swagger docs
 - `scripts`: setup scripts
 - `web`: frontend
+
+smnthjm08:go-social% migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" force 1
+
+smnthjm08:go-social% migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" drop -f
+
+smnthjm08:go-social% migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" up
+
+Fixed the migration state (force version to 1)
+
+Reset the database (drop everything)
+
+Re-applied migrations cleanly

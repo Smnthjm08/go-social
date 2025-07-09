@@ -23,10 +23,19 @@ func main() {
 		},
 	}
 
-	db, err := db.New(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
+	db, err := db.New(
+		cfg.db.addr,
+		cfg.db.maxOpenConns,
+		cfg.db.maxIdleConns,
+		cfg.db.maxIdleTime,
+	)
+
 	if err != nil {
 		log.Panic(err)
 	}
+
+	defer db.Close()
+	log.Printf("db connect")
 
 	store := store.NewStorage(db)
 
