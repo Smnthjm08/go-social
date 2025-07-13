@@ -23,14 +23,22 @@ Currently in development.
 - `scripts`: setup scripts
 - `web`: frontend
 
-smnthjm08:go-social% migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" force 1
+**Database Migration Commands**
 
-smnthjm08:go-social% migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" drop -f
+- **Fix the migration state (force version to 1):**
 
-smnthjm08:go-social% migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" up
+  ```bash
+  migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" force 1
+  ```
 
-Fixed the migration state (force version to 1)
+- **Reset the database (drop everything):**
 
-Reset the database (drop everything)
+  ```bash
+  migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" drop -f
+  ```
 
-Re-applied migrations cleanly
+- **Re-apply migrations cleanly:**
+
+  ```bash
+  migrate -path=./cmd/migrate/migrations -database="postgres://postgres:postgres@localhost/social?sslmode=disable" up
+  ```
