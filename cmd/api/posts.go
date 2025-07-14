@@ -11,10 +11,10 @@ import (
 )
 
 type CreatePostPayload struct {
-	Title   string   `json:"title"`
-	Content string   `json:"content"`
-	UserId  int64    `json:"user_id"`
-	Tags    []string `json:"tags,omitempty"`
+	Title   string `json:"title" validate:"required,max=100"`
+	Content string `json:"content" validate:"required,max=1000"`
+	// UserId  int64    `json:"user_id" validate:"required,max=100"`
+	Tags []string `json:"tags,omitempty"`
 }
 
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,6 +22,16 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 
 	if err := readJSON(w, r, &payload); err != nil {
 		// writeJSONError(w, http.StatusBadRequest, err.Error())
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// if payload.Content == "" {
+	// 	app.badRequestResponse(w, r, fmt.Errorf("content is required"))
+	// 	return
+	// }
+
+	if err := Vaidate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -73,9 +83,18 @@ func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Reques
 		default:
 			// writeJSONError(w, http.StatusInternalServerError, err.Error())
 			app.internalServerError(w, r, err)
-			return
 		}
+		return
 	}
+
+	comments, err := app.store.Comments.GetByPostID(ctx, id)
+
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	post.Comments = comments
 
 	if err := writeJSON(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
