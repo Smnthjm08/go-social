@@ -38,7 +38,7 @@ func main() {
 	}
 
 	defer db.Close()
-	log.Printf("db connect")
+	log.Printf("db connected...")
 
 	store := store.NewStorage(db)
 
