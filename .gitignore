@@ -1,7 +1,8 @@
 tmp
 .env
-.envrc
 bin/
+
+.envrc
 
 # Logs
 logs

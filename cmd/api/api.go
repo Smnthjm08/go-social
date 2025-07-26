@@ -18,7 +18,6 @@ type dbConfig struct {
 	maxOpenConns int
 	maxIdleConns int
 	maxIdleTime  string
-	apiURL       string
 }
 
 type application struct {
@@ -27,9 +26,10 @@ type application struct {
 }
 
 type config struct {
-	addr string
-	db   dbConfig
-	env  string
+	addr   string
+	db     dbConfig
+	env    string
+	apiURL string
 }
 
 func (app *application) mount() http.Handler {
@@ -101,7 +101,7 @@ func (app *application) mount() http.Handler {
 func (app *application) run(mux http.Handler) error {
 	// mux := http.NewServeMux()
 	docs.SwaggerInfo.Version = version
-	docs.SwaggerInfo.Host = app.config.db.apiURL
+	docs.SwaggerInfo.Host = app.config.apiURL
 	docs.SwaggerInfo.BasePath = "/v1"
 
 	server := &http.Server{
