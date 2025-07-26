@@ -8,6 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/smnthjm08/go-social/internal/store"
+
+	"github.com/smnthjm08/go-social/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type dbConfig struct {
@@ -15,6 +18,7 @@ type dbConfig struct {
 	maxOpenConns int
 	maxIdleConns int
 	maxIdleTime  string
+	apiURL       string
 }
 
 type application struct {
@@ -41,6 +45,10 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+
+		// docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		// r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/v1/swagger/doc.json")))
 
 		// v1/posts
 		r.Route("/posts", func(r chi.Router) {
@@ -92,6 +100,9 @@ func (app *application) mount() http.Handler {
 
 func (app *application) run(mux http.Handler) error {
 	// mux := http.NewServeMux()
+	docs.SwaggerInfo.Version = version
+	docs.SwaggerInfo.Host = app.config.db.apiURL
+	docs.SwaggerInfo.BasePath = "/v1"
 
 	server := &http.Server{
 		Addr:         app.config.addr,
