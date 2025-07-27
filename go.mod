@@ -35,4 +35,4 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 )
 
-replace github.com/smnthjm08/go-social/docs => ./docs
+// replace github.com/smnthjm08/go-social/docs => ./docs

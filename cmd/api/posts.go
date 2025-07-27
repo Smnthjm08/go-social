@@ -24,10 +24,9 @@ type CreatePostPayload struct {
 }
 
 type UpdatePostPayload struct {
-	Title   *string `json:"title" validate:"omitempty,max=100"`
-	Content *string `json:"content" validate:"omitempty,max=1000"`
-	// UserId  int64    `json:"user_id" validate:"required,max=100"`
-	Tags *[]string `json:"tags"`
+	Title   *string   `json:"title" validate:"omitempty,max=100"`
+	Content *string   `json:"content" validate:"omitempty,max=1000"`
+	Tags    *[]string `json:"tags"`
 }
 
 func getPostFromCtx(r *http.Request) *store.Post {
@@ -35,6 +34,57 @@ func getPostFromCtx(r *http.Request) *store.Post {
 	return post
 }
 
+func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		idParams := chi.URLParam(r, "postID")
+		id, err := strconv.ParseInt(idParams, 10, 64)
+		if err != nil {
+			// writeJSONError(w, http.StatusInternalServerError, err.Error())
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+
+		post, err := app.store.Posts.GetByID(ctx, id)
+		if err != nil {
+			log.Printf("wrapped error: %v", err)
+
+			switch {
+			case errors.Is(err, store.ErrNotFound):
+				app.notFoundResponse(w, r, err)
+
+			case errors.Is(err, sql.ErrNoRows):
+				// log.Printf("post not found: %v", err)
+				app.notFoundResponse(w, r, err)
+			default:
+				// log.Printf("internal server error: %v", err)
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx = context.WithValue(ctx, PostCtx, post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+
+}
+
+// CreatePost godoc
+//
+//	@Summary		Creates a post
+//	@Description	Creates a post
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		CreatePostPayload	true	"Post payload"
+//	@Success		201		{object}	store.Post
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 
@@ -80,6 +130,19 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// GetPost godoc
+//
+//	@Summary		Fetches a post
+//	@Description	Fetches a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int	true	"Post ID"
+//	@Success		200		{object}	store.Post
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}/ [get]
 func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
@@ -98,43 +161,22 @@ func (app *application) getPostByIDHandler(w http.ResponseWriter, r *http.Reques
 
 }
 
-func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		idParams := chi.URLParam(r, "postID")
-		id, err := strconv.ParseInt(idParams, 10, 64)
-		if err != nil {
-			// writeJSONError(w, http.StatusInternalServerError, err.Error())
-			app.internalServerError(w, r, err)
-			return
-		}
-
-		ctx := r.Context()
-
-		post, err := app.store.Posts.GetByID(ctx, id)
-		if err != nil {
-			log.Printf("wrapped error: %v", err)
-
-			switch {
-			case errors.Is(err, store.ErrNotFound):
-				app.notFoundResponse(w, r, err)
-
-			case errors.Is(err, sql.ErrNoRows):
-				// log.Printf("post not found: %v", err)
-				app.notFoundResponse(w, r, err)
-			default:
-				// log.Printf("internal server error: %v", err)
-				app.internalServerError(w, r, err)
-			}
-			return
-		}
-
-		ctx = context.WithValue(ctx, PostCtx, post)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-
-}
-
+// UpdatePost godoc
+//
+//	@Summary		Updates a post
+//	@Description	Updates a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int					true	"Post ID"
+//	@Param			payload	body		UpdatePostPayload	true	"Post payload"
+//	@Success		200		{object}	store.Post
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}/ [put]
 func (app *application) updatePostByIDHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
@@ -172,6 +214,19 @@ func (app *application) updatePostByIDHandler(w http.ResponseWriter, r *http.Req
 
 }
 
+// DeletePost godoc
+//
+//	@Summary		Deletes a post
+//	@Description	Delete a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int	true	"Post ID"
+//	@Success		204		{object}	string
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}/ [delete]
 func (app *application) deletePostByIDHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "postID")
 	id, err := strconv.ParseInt(idParam, 10, 64)
