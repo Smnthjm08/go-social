@@ -77,7 +77,7 @@ func Seed(store store.Storage) error {
 
 	users := generateUsers(20)
 	for _, user := range users {
-		if err := store.Users.Create(ctx, user); err != nil {
+		if err := store.Users.Create(ctx, nil, user); err != nil {
 			log.Println("Error creating user:", err)
 			return err
 		}
@@ -110,7 +110,7 @@ func generateUsers(num int) []*store.User {
 		users[i] = &store.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
 			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
-			Password: "123456",
+			Password: store.UserStore.Password("123456"),
 		}
 	}
 
@@ -122,13 +122,8 @@ func generatePosts(num int, users []*store.User) []*store.Post {
 	for i := 0; i < num; i++ {
 		user := users[rand.Intn(len(users))]
 
-		var userID int64
-		// Sscanf scans the argument string, storing successive space-separated values
-		// into successive arguments as determined by the format. It returns the number of items
-		// successfully parsed. Newlines in the input must match newlines in the format.
-		fmt.Sscanf(user.ID, "%d", &userID)
 		posts[i] = &store.Post{
-			UserId:  userID,
+			UserId:  user.ID,
 			Title:   titles[rand.Intn(len(titles))],
 			Content: contents[rand.Intn(len(contents))],
 			Tags: []string{
@@ -145,11 +140,9 @@ func generateComments(num int, users []*store.User, posts []*store.Post) []*stor
 	cms := make([]*store.Comment, num)
 	for i := 0; i < num; i++ {
 		user := users[rand.Intn(len(users))]
-		var userID int64
-		fmt.Sscanf(user.ID, "%d", &userID)
 		cms[i] = &store.Comment{
 			PostId:  posts[rand.Intn(len(posts))].ID,
-			UserId:  userID,
+			UserId:  user.ID,
 			Content: comments[rand.Intn(len(comments))],
 		}
 	}

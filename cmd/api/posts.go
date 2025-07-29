@@ -99,7 +99,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	// 	return
 	// }
 
-	if err := Vaidate.Struct(payload); err != nil {
+	if err := Validate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -187,7 +187,7 @@ func (app *application) updatePostByIDHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := Vaidate.Struct(payload); err != nil {
+	if err := Validate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}

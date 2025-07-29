@@ -628,10 +628,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"

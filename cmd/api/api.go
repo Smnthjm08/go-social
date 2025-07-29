@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/smnthjm08/go-social/internal/store"
+	"go.uber.org/zap"
 
 	"github.com/smnthjm08/go-social/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -23,6 +23,7 @@ type dbConfig struct {
 type application struct {
 	config config
 	store  store.Storage
+	logger *zap.SugaredLogger
 }
 
 type config struct {
@@ -30,6 +31,11 @@ type config struct {
 	db     dbConfig
 	env    string
 	apiURL string
+	mail   mailConfig
+}
+
+type mailConfig struct {
+	exp time.Duration
 }
 
 func (app *application) mount() http.Handler {
@@ -81,6 +87,10 @@ func (app *application) mount() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Get("/feed", app.getUserFeedHandler)
 			})
+
+			r.Route("/auth", func(r chi.Router) {
+				r.Post("/user", app.registerUserHandler)
+			})
 		})
 
 	})
@@ -111,7 +121,7 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("server has started at %s", app.config.addr)
+	app.logger.Info("server has started", " addr", app.config.addr, ", env: ", app.config.env)
 
 	return server.ListenAndServe()
 }

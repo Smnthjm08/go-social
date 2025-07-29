@@ -102,13 +102,13 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 
 	ctx := r.Context()
 
-	followerID, err := strconv.ParseInt(followerUser.ID, 10, 64)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+	// followerID, err := strconv.ParseInt(followerUser.ID, 10, 64)
+	// if err != nil {
+	// 	app.badRequestResponse(w, r, err)
+	// 	return
+	// }
 
-	if err := app.store.Followers.Follow(ctx, followerID, payload.UserId); err != nil {
+	if err := app.store.Followers.Follow(ctx, followerUser.ID, payload.UserId); err != nil {
 		switch err {
 		case store.ErrConflict:
 			app.conflictResponse(w, r, err)
@@ -153,13 +153,13 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 
 	ctx := r.Context()
 
-	followerID, err := strconv.ParseInt(unfollowUser.ID, 10, 64)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+	// followerID, err := strconv.ParseInt(unfollowUser.ID, 10, 64)
+	// if err != nil {
+	// 	app.badRequestResponse(w, r, err)
+	// 	return
+	// }
 
-	if err := app.store.Followers.Unfollow(ctx, followerID, payload.UserId); err != nil {
+	if err := app.store.Followers.Unfollow(ctx, unfollowUser.ID, payload.UserId); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
