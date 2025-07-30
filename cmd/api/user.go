@@ -169,35 +169,33 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-// 	unfollowUser := getUserFromContext(r)
+// ActivateUser godoc
+//
+//	@Summary		Activates/Register a user
+//	@Description	Activates/Register a user by invitation token
+//	@Tags			user
+//	@Produce		json
+//	@Param			token	path		string	true	"Invitation token"
+//	@Success		204		{string}	string	"User activated"
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/user/activate/{token} [put]
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
 
-// 	type UnfollowUser struct {
-// 		UserId int64 `json:"user_id"`
-// 	}
+	err := app.store.Users.Activate(r.Context(), token)
+	if err != nil {
+		switch err {
+		case store.ErrNotFound:
+			app.notFoundResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
 
-// 	// pending
-// 	var payload UnfollowUser
-
-// 	if err := readJSON(w, r, payload); err != nil {
-// 		app.badRequestResponse(w, r, err)
-// 		return
-// 	}
-
-// 	ctx := r.Context()
-
-// 	followerID, err := strconv.ParseInt(unfollowUser.ID, 10, 64)
-// 	if err != nil {
-// 		app.badRequestResponse(w, r, err)
-// 		return
-// 	}
-
-// 	if err := app.store.Followers.Unfollow(ctx, followerID, payload.UserId); err != nil {
-// 		app.internalServerError(w, r, err)
-// 		return
-// 	}
-
-// 	if err := app.jsonResponse(w, http.StatusOK, nil); err != nil {
-// 		app.internalServerError(w, r, err)
-// 	}
-// }
+	if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
