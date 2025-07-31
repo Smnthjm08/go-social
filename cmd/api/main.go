@@ -9,6 +9,7 @@ import (
 
 	"github.com/smnthjm08/go-social/internal/db"
 	"github.com/smnthjm08/go-social/internal/env"
+	"github.com/smnthjm08/go-social/internal/mailer"
 	"github.com/smnthjm08/go-social/internal/store"
 	"go.uber.org/zap"
 )
@@ -16,7 +17,7 @@ import (
 const version = "0.0.1"
 
 //	@title			go-social API
-//	@description	API for the GopherSocial, a social network built on go
+//	@description	API for the go-social, a social network built on go
 //	@termsOfService	http://swagger.io/terms/
 
 //	@contact.name	API Support
@@ -37,8 +38,9 @@ const version = "0.0.1"
 func main() {
 	cfg := config{
 		// addr: ":8000",
-		addr:   env.GetString("ADDR", ":8000"),
-		apiURL: env.GetString("EXTERNAL_URL", "localhost:8000"),
+		addr:        env.GetString("ADDR", ":8000"),
+		apiURL:      env.GetString("EXTERNAL_URL", "localhost:8000"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://postgres:postgres@localhost/social?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
@@ -47,7 +49,11 @@ func main() {
 		},
 		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3,
+			exp:       time.Hour * 24 * 3,
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
 		},
 	}
 
@@ -74,10 +80,13 @@ func main() {
 
 	store := store.NewStorage(db)
 
+	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	os.LookupEnv("PATH")

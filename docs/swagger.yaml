@@ -156,7 +156,7 @@ info:
     email: support@swagger.io
     name: API Support
     url: http://www.swagger.io/support
-  description: API for the GopherSocial, a social network built on go
+  description: API for the go-social, a social network built on go
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html

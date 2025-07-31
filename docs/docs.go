@@ -791,7 +791,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "go-social API",
-	Description:      "API for the GopherSocial, a social network built on go",
+	Description:      "API for the go-social, a social network built on go",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

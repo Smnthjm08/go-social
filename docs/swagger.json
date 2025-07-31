@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "API for the GopherSocial, a social network built on go",
+        "description": "API for the go-social, a social network built on go",
         "title": "go-social API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
