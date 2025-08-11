@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/smnthjm08/go-social/internal/auth"
 	"github.com/smnthjm08/go-social/internal/mailer"
 	"github.com/smnthjm08/go-social/internal/store"
 	"go.uber.org/zap"
@@ -23,10 +24,26 @@ type dbConfig struct {
 }
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
+	authenticator auth.Authenticator
+}
+
+type basicConfig struct {
+	user string
+	pass string
+}
+
+type tokenConfig struct {
+	secret string
+	exp    time.Duration
+	iss    string
+}
+type authConfig struct {
+	basic basicConfig
+	token tokenConfig
 }
 
 type config struct {
@@ -36,6 +53,7 @@ type config struct {
 	apiURL      string
 	mail        mailConfig
 	frontendURL string
+	auth        authConfig
 }
 
 type mailConfig struct {
@@ -71,7 +89,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/health", app.healthCheckHandler)
+		r.With(app.BasicAuthMiddleware()).Get("/health", app.healthCheckHandler)
 
 		// docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		// r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
@@ -111,8 +129,10 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
+		// public routes
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/user", app.registerUserHandler)
+			r.Post("/token", app.createTokenHandler)
 		})
 
 	})

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/smnthjm08/go-social/internal/auth"
 	"github.com/smnthjm08/go-social/internal/db"
 	"github.com/smnthjm08/go-social/internal/env"
 	"github.com/smnthjm08/go-social/internal/mailer"
@@ -55,6 +56,17 @@ func main() {
 				apiKey: env.GetString("SENDGRID_API_KEY", ""),
 			},
 		},
+		auth: authConfig{
+			basic: basicConfig{
+				user: env.GetString("AUTH_BASIC_USER", "admin"),
+				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
+			},
+			token: tokenConfig{
+				secret: env.GetString("AUTH_TOKEN_SECRET", "go-social"),
+				exp:    time.Hour * 24 * 3, // 3 days
+				iss:    "go-social",
+			},
+		},
 	}
 
 	// logger
@@ -82,11 +94,14 @@ func main() {
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
+
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtAuthenticator,
 	}
 
 	os.LookupEnv("PATH")
