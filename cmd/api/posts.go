@@ -94,22 +94,19 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// if payload.Content == "" {
-	// 	app.badRequestResponse(w, r, fmt.Errorf("content is required"))
-	// 	return
-	// }
-
 	if err := Validate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
+
+	user := getUserFromContext(r)
 
 	post := &store.Post{
 		Title:   payload.Title,
 		Content: payload.Content,
 		// UserId:  payload.UserId,
 		// change later after the auth
-		UserId: 1,
+		UserId: user.ID,
 		Tags:   payload.Tags,
 	}
 
