@@ -102,8 +102,8 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	user := getUserFromContext(r)
 
 	post := &store.Post{
-		Title:   payload.Title,
 		Content: payload.Content,
+		Title:   payload.Title,
 		// UserId:  payload.UserId,
 		// change later after the auth
 		UserId: user.ID,

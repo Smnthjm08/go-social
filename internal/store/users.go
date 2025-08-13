@@ -24,11 +24,17 @@ type User struct {
 	CreatedAt string   `json:"created_at"`
 	UpdatedAt string   `json:"updated_at"`
 	IsActive  bool     `json:"is_active"`
+	RoleID    int64    `json:"role_id"`
+	Role      Role     `json:"role"`
 }
 
 type password struct {
 	// text *string
 	hash []byte
+}
+
+func (p *password) Compare(text string) error {
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(text))
 }
 
 func (p *password) Set(text string) error {
@@ -50,8 +56,8 @@ type UserStore struct {
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
-	INSERT INTO users (username, password, email)
-	VALUES ($1, $2, $3) RETURNING id, created_at
+	INSERT INTO users (username, password, email, role_id)
+	VALUES ($1, $2, $3, $4) RETURNING id, created_at
 	`
 
 	err := s.db.QueryRowContext(
@@ -60,6 +66,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		user.Username,
 		user.Password.hash,
 		user.Email,
+		user.RoleID,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -81,9 +88,12 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, userId int64) (*User, error) {
 	query := `
-		SELECT id, username, password, email, created_at
+		SELECT users.id, username, password, email, created_at, roles.id, roles.name, roles.description
 		FROM users
-		WHERE id = $1
+		JOIN roles
+		ON (users.role_id = roles.id)
+		WHERE users.id = $1 
+		AND is_active = true
 	`
 
 	user := &User{}
@@ -96,6 +106,9 @@ func (s *UserStore) GetByID(ctx context.Context, userId int64) (*User, error) {
 		&user.Password.hash,
 		&user.Email,
 		&user.CreatedAt,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Description,
 	)
 	if err != nil {
 		switch err {

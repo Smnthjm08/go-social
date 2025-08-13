@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/smnthjm08/go-social/internal/store"
 )
 
 func (app *application) BasicAuthMiddleware() func(http.Handler) http.Handler {
@@ -72,7 +73,6 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		token := parts[1]
 
 		jwtToken, err := app.authenticator.ValidateToken(token)
-		fmt.Println("jwttoken\n", jwtToken)
 		if err != nil {
 			app.unauthorizedErrorResponse(w, r, err)
 			return
@@ -99,4 +99,40 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 
 	})
+}
+
+func (app *application) checkPostOwnership(requiredRole string, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := getUserFromContext(r)
+		post := getPostFromCtx(r)
+
+		//  if it is the users post
+		if post.UserId == user.ID {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		//  role precedence check
+		allowed, err := app.checRolePrecedence(r.Context(), user, requiredRole)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		if !allowed {
+			app.forbiddenResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) checRolePrecedence(ctx context.Context, user *store.User, roleName string) (bool, error) {
+	role, err := app.store.Roles.GetByName(ctx, roleName)
+
+	if err != nil {
+		return false, err
+	}
+	return user.Role.Level >= role.Level, nil
 }
