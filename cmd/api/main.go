@@ -7,11 +7,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/smnthjm08/go-social/internal/auth"
 	"github.com/smnthjm08/go-social/internal/db"
 	"github.com/smnthjm08/go-social/internal/env"
 	"github.com/smnthjm08/go-social/internal/mailer"
 	"github.com/smnthjm08/go-social/internal/store"
+	"github.com/smnthjm08/go-social/internal/store/cache"
 	"go.uber.org/zap"
 )
 
@@ -67,6 +69,12 @@ func main() {
 				iss:    "go-social",
 			},
 		},
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PW", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", true),
+		},
 	}
 
 	// logger
@@ -90,7 +98,14 @@ func main() {
 	log.Printf("db connected...")
 	logger.Info("database connection pool established")
 
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis cache connection established")
+	}
+
 	store := store.NewStorage(db)
+	cacheStorage := cache.NewRedisStorage(rdb)
 
 	mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 
@@ -99,6 +114,7 @@ func main() {
 	app := &application{
 		config:        cfg,
 		store:         store,
+		cacheStorage:  cacheStorage,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
