@@ -27,7 +27,7 @@ type dbConfig struct {
 type application struct {
 	config        config
 	store         store.Storage
-	cacheStorage  cache.Strorage
+	cacheStorage  cache.Storage
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
