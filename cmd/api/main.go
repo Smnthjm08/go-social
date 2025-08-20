@@ -12,6 +12,7 @@ import (
 	"github.com/smnthjm08/go-social/internal/db"
 	"github.com/smnthjm08/go-social/internal/env"
 	"github.com/smnthjm08/go-social/internal/mailer"
+	"github.com/smnthjm08/go-social/internal/ratelimiter"
 	"github.com/smnthjm08/go-social/internal/store"
 	"github.com/smnthjm08/go-social/internal/store/cache"
 	"go.uber.org/zap"
@@ -75,6 +76,11 @@ func main() {
 			db:      env.GetInt("REDIS_DB", 0),
 			enabled: env.GetBool("REDIS_ENABLED", true),
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_COUNT", 20),
+			TImeFrame:           time.Second * 5,
+			Enabled:             env.GetBool("RATE_LIMITER__ENABLED", true),
+		},
 	}
 
 	// logger
@@ -102,7 +108,14 @@ func main() {
 	if cfg.redisCfg.enabled {
 		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
 		logger.Info("redis cache connection established")
+
+		defer rdb.Close()
 	}
+
+	ratelimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestPerTimeFrame,
+		cfg.rateLimiter.TImeFrame,
+	)
 
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)
@@ -118,6 +131,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   ratelimiter,
 	}
 
 	os.LookupEnv("PATH")

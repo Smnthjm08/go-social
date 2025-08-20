@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -9,6 +14,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/smnthjm08/go-social/internal/auth"
 	"github.com/smnthjm08/go-social/internal/mailer"
+	"github.com/smnthjm08/go-social/internal/ratelimiter"
 	"github.com/smnthjm08/go-social/internal/store"
 	"github.com/smnthjm08/go-social/internal/store/cache"
 	"go.uber.org/zap"
@@ -31,6 +37,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	rateLimiter   ratelimiter.Limiter
 }
 
 type basicConfig struct {
@@ -57,6 +64,7 @@ type config struct {
 	frontendURL string
 	auth        authConfig
 	redisCfg    redisConfig
+	rateLimiter ratelimiter.Config
 }
 
 type redisConfig struct {
@@ -94,12 +102,13 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(app.RateLimiterMiddleware)
 
 	// request timeout
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.With(app.BasicAuthMiddleware()).Get("/health", app.healthCheckHandler)
+		r.Get("/health", app.healthCheckHandler)
 
 		// docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		// r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
@@ -176,7 +185,35 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
+	shutdown := make(chan error)
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		s := <-quit
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		app.logger.Infow("signal caught", "signal", s.String())
+
+		shutdown <- server.Shutdown(ctx)
+	}()
+
 	app.logger.Info("server has started", " addr", app.config.addr, ", env: ", app.config.env)
 
-	return server.ListenAndServe()
+	err := server.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	err = <-shutdown
+	if err != nil {
+		return err
+	}
+
+	app.logger.Info("server has started", " addr", app.config.addr, ", env: ", app.config.env)
+
+	// return server.ListenAndServe()
+	return nil
 }
