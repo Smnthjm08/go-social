@@ -1,8 +1,9 @@
-import { API_URL } from "@/App";
+// import { API_URL } from "@/App";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "./ui/button";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 export const ConfirmationPage = () => {
  const {token = ''} = useParams();

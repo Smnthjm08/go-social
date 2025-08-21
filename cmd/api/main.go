@@ -3,8 +3,10 @@
 package main
 
 import (
+	"expvar"
 	"log"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -133,6 +135,14 @@ func main() {
 		authenticator: jwtAuthenticator,
 		rateLimiter:   ratelimiter,
 	}
+
+	expvar.NewString("version").Set(version)
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
 
 	os.LookupEnv("PATH")
 
