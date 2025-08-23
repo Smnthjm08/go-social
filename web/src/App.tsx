@@ -1,23 +1,20 @@
 import { Button } from "@/components/ui/button";
 import axios from "axios";
-import { useEffect } from "react";
+import { toast } from "sonner";
 
 // export const API_URL = import.meta.VITE_API_URL || "http://localhost:8000/v1";
 
 function App() {
-
-useEffect(() => {
   async function fetchHealth() {
     const res = await axios.get("http://localhost:8000/v1/health");
+    toast.success(`status: ${res?.data?.status} | env: ${res?.data?.env}`);
     console.log(res.data);
   }
-  fetchHealth();
-}, []);
 
   return (
-      <div className="flex min-h-svh flex-col items-center justify-center">
-        <Button>Click me</Button>
-      </div>
+    <div className="flex min-h-svh flex-col items-center justify-center">
+      <Button onClick={() => fetchHealth()}>Click me</Button>
+    </div>
   );
 }
 
