@@ -1,12 +1,14 @@
 import { createBrowserRouter } from "react-router-dom";
 import { ConfirmationPage } from "./components/confirmation";
 import App from "./App";
-import LoginPage from "./pages/auth/login-page";
-import RegisterPage from "./pages/auth/register-page";
-
-const confirmationEndpoint = "/confirm/:token";
-const loginEndpoint = "/login";
-const registerEndpoint = "/register";
+import LoginPage from "./app/auth/login-page";
+import RegisterPage from "./app/auth/register-page";
+import {
+  confirmationEndpoint,
+  forgotPasswordEndpoint,
+  loginEndpoint,
+  registerEndpoint,
+} from "./utils/endpoints";
 
 export const router = createBrowserRouter([
   {
@@ -14,8 +16,8 @@ export const router = createBrowserRouter([
     element: <App />,
   },
   {
-    path: confirmationEndpoint,
-    element: <ConfirmationPage />,
+    path: "*",
+    element: <div>404 Not Found</div>,
   },
   {
     path: loginEndpoint,
@@ -24,5 +26,13 @@ export const router = createBrowserRouter([
   {
     path: registerEndpoint,
     element: <RegisterPage />,
-  }
+  },
+  {
+    path: confirmationEndpoint,
+    element: <ConfirmationPage />,
+  },
+  {
+    path: forgotPasswordEndpoint,
+    element: <div>Forgot Password Page</div>,
+  },
 ]);
