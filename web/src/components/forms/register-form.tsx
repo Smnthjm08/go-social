@@ -39,9 +39,7 @@ export function RegisterForm({
     setIsLoading(true);
     
     try {
-      console.log("Registration data:", formData);
-      const response = await axiosInstance.post("/auth/user", formData);
-      console.log("Registration response:", response.data);
+      const response = await axiosInstance.post("/auth/register", formData);
       if (response.status === 201) {
         toast.success("Registration successful! Please check your email to confirm your account.");
       }

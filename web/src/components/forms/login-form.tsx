@@ -39,9 +39,7 @@ export function LoginForm({
     setIsLoading(true);
 
     try {
-      console.log("Login data:", formData);
-      const response = await axiosInstance.post("/auth/token", formData);
-      console.log("Login response:", response.data);
+      const response = await axiosInstance.post("/auth/login", formData);
       if (response.status === 201) {
         toast.success("Login successful!");
       }

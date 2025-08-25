@@ -8,7 +8,6 @@ const App = () => {
     try {
       const res = await axiosInstance.get("http://localhost:8000/v1/health");
       toast.success(`status: ${res?.data?.status} | env: ${res?.data?.env}`);
-      console.log(res.data);
     } catch (err) {
       toast.error("Failed to fetch health check");
       console.error(err);

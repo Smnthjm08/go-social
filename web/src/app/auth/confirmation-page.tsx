@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Button } from "./ui/button";
+import { Button } from "../../components/ui/button";
 import axiosInstance from "@/api/axios-instance";
 import { toast } from "sonner";
 
@@ -9,9 +9,7 @@ export const ConfirmationPage = () => {
 
   const handleConfirm = async () => {
       try {
-        console.log("Confirmation action triggered");
-        const response = await axiosInstance.put("user/activate/" + token);
-        console.log("Response:", response);
+        const response = await axiosInstance.put("auth/activate/" + token);
         if (response.status === 204){
             redirect("/");
             toast.success("Account activated successfully!");
@@ -24,7 +22,7 @@ export const ConfirmationPage = () => {
   };
 
   return (
-    <div>
+    <div className="flex min-h-svh w-full flex-col items-center justify-center p-6 md:p-10 gap-4">
       <h1>ConfirmationPage</h1>
       <Button onClick={() => handleConfirm()}>Click to confirm</Button>
     </div>

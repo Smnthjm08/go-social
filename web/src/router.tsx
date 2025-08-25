@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import { ConfirmationPage } from "./components/confirmation";
+import { ConfirmationPage } from "./app/auth/confirmation-page";
 import App from "./App";
 import LoginPage from "./app/auth/login-page";
 import RegisterPage from "./app/auth/register-page";

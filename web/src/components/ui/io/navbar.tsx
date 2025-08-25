@@ -17,7 +17,6 @@ import { cn } from "../../../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { loginEndpoint, registerEndpoint } from "@/utils/endpoints";
 
-// Simple logo component for the navbar
 const Logo = (props: React.SVGAttributes<SVGElement>) => {
   return (
     <svg
@@ -50,7 +49,6 @@ const Logo = (props: React.SVGAttributes<SVGElement>) => {
   );
 };
 
-// Hamburger icon component
 const HamburgerIcon = ({
   className,
   ...props
@@ -83,7 +81,6 @@ const HamburgerIcon = ({
   </svg>
 );
 
-// Types
 export interface NavbarNavLink {
   href: string;
   label: string;
@@ -98,7 +95,6 @@ export interface NavbarProps extends React.HTMLAttributes<HTMLElement> {
   ctaHref?: string;
 }
 
-// Default navigation links
 const defaultNavigationLinks: NavbarNavLink[] = [
   // { href: '#', label: 'Home', active: true },
   { href: "#features", label: "Features" },
@@ -142,7 +138,6 @@ export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
       };
     }, []);
 
-    // Combine refs
     const combinedRef = React.useCallback(
       (node: HTMLElement | null) => {
         containerRef.current = node;
