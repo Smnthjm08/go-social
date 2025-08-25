@@ -117,6 +117,14 @@ func (app *application) mount() http.Handler {
 		// r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/v1/swagger/doc.json")))
 
+		// auth routes
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", app.registerUserHandler)
+			r.Post("/login", app.loginUserHandler)
+			r.Put("/activate/{token}", app.activateUserHandler)
+			// backend - forgot-password endpoint pending
+		})
+
 		// v1/posts
 		r.Route("/posts", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
@@ -133,16 +141,13 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/user", func(r chi.Router) {
-			r.Put("/activate/{token}", app.activateUserHandler)
 
 			r.Route("/{userId}", func(r chi.Router) {
 				r.Use(app.AuthTokenMiddleware)
 				// r.Use(app.userContextMiddleware)
-
 				r.Get("/", app.getUserHandler)
 				// r.Delete("/", app.deletePostByIDHandler)
 				// r.Put("/", app.updatePostByIDHandler)
-
 				r.Put("/follow", app.followUserHandler)
 				r.Put("/unfollow", app.unfollowUserHandler)
 			})
@@ -152,12 +157,6 @@ func (app *application) mount() http.Handler {
 				r.Use(app.AuthTokenMiddleware)
 				r.Get("/feed", app.getUserFeedHandler)
 			})
-		})
-
-		// public routes
-		r.Route("/auth", func(r chi.Router) {
-			r.Post("/user", app.registerUserHandler)
-			r.Post("/token", app.createTokenHandler)
 		})
 
 	})
