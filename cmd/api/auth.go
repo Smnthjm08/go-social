@@ -129,7 +129,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// createTokenHandler godoc
+// loginUserHandler godoc
 //
 //	@Summary		Creates a token
 //	@Description	Creates a token for a user
@@ -142,7 +142,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Failure		401		{object}	error
 //	@Failure		500		{object}	error
 //	@Router			/auth/token [post]
-func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	// parse payload credentials
 	var payload CreateUserTokenPayload
 
